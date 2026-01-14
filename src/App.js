@@ -1,76 +1,101 @@
 import { useState } from "react";
 import "./App.css";
 
-function App() {
-  const [topic, setTopic] = useState("");
+export default function App() {
+  const [text, setText] = useState("");
   const [caption, setCaption] = useState("");
-  const [copied, setCopied] = useState(false);
   const [loading, setLoading] = useState(false);
 
   const generateCaption = async () => {
-    if (!topic) return;
+    if (!text) return alert("Enter something");
 
     setLoading(true);
     setCaption("");
-    setCopied(false);
 
     try {
-      const res = await fetch("http://localhost:5000/caption", {
+      const res = await fetch("/api/caption", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ topic }),
+        body: JSON.stringify({ text }),
       });
 
       const data = await res.json();
       setCaption(data.caption);
-    } catch {
-      setCaption("❌ Error generating caption");
-    } finally {
-      setLoading(false);
+    } catch (err) {
+      alert("AI error");
     }
-  };
 
-  const copyCaption = () => {
-    navigator.clipboard.writeText(caption);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 1500);
+    setLoading(false);
   };
 
   return (
-    <div className="app dark-bg">
-      <div className="card slide-up">
-        <h1 className="title glow-text">AI Caption Generator</h1>
+    <div style={styles.page}>
+      <div style={styles.card}>
+        <h1 style={styles.title}>AI Caption Generator</h1>
 
-        {/* INPUT */}
-        <input
-          className="input"
-          type="text"
-          placeholder="Describe your post..."
-          value={topic}
-          onChange={(e) => setTopic(e.target.value)}
+        <textarea
+          style={styles.textarea}
+          placeholder="Describe your video or photo..."
+          value={text}
+          onChange={(e) => setText(e.target.value)}
         />
 
-        {/* LOADING */}
-        {loading && <p className="loading">Generating...</p>}
+        <button style={styles.button} onClick={generateCaption}>
+          {loading ? "Generating..." : "Generate Caption"}
+        </button>
 
-        {/* RESULT */}
-        {caption && (
-          <div className="caption-card">
-            <p className="caption-text">{caption}</p>
-
-            <button className="copy-btn glow" onClick={copyCaption}>
-              {copied ? "✅ Copied!" : "📋 Copy"}
-            </button>
-          </div>
-        )}
+        {caption && <p style={styles.caption}>{caption}</p>}
       </div>
-
-      {/* GENERATE BUTTON */}
-      <button className="fab pulse" onClick={generateCaption}>
-        ✨ Generate
-      </button>
     </div>
   );
 }
 
-export default App;
+const styles = {
+  page: {
+    minHeight: "100vh",
+    background: "linear-gradient(135deg, #0f0f0f, #1a1a1a)",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    padding: 20,
+    fontFamily: "sans-serif",
+  },
+  card: {
+    maxWidth: 500,
+    width: "100%",
+    background: "#121212",
+    padding: 24,
+    borderRadius: 16,
+    boxShadow: "0 0 30px rgba(0,0,0,0.6)",
+  },
+  title: {
+    color: "#fff",
+    textAlign: "center",
+    marginBottom: 20,
+  },
+  textarea: {
+    width: "100%",
+    height: 100,
+    borderRadius: 10,
+    border: "none",
+    padding: 12,
+    fontSize: 16,
+    outline: "none",
+    marginBottom: 16,
+  },
+  button: {
+    width: "100%",
+    padding: 12,
+    borderRadius: 10,
+    border: "none",
+    background: "#6c63ff",
+    color: "#fff",
+    fontSize: 16,
+    cursor: "pointer",
+  },
+  caption: {
+    marginTop: 20,
+    color: "#ddd",
+    lineHeight: 1.5,
+  },
+};
